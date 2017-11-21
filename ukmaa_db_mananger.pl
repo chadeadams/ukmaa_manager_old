@@ -61,15 +61,31 @@ $dbh->do(" DELETE TABLE members ");
 }
 
 sub drop_promotion_table {
+print "Are you sure you want to delete the Rank Promotion Table? (y/n)";
+
 $dbh->do(" DELETE TABLE promotions ");
 }
 
 sub delete_ukmaa_database {
+my $answer = "";
+print "Are you sure you want to delete the entire database? (y/n)"; 
+$answer = <STDIN>; 
+$answer = uc($answer);
+print "\n";
+
+my $command = "";
 switch ($os) {
-	case "linux" {system("rm -f $db_name"); return 0;}
-	case "mac"   {system("rm -f $db_name"); return 0;}	
-	case "win"   {system("del $db_name");   return 0;}
+case "linux" {$command = "rm -f $db_name";};
+case "win"   {$command = "del $db_name";};
+case "mac"   {$command = "rm -f $db_name";};
 }
+
+print "$answer"; <STDIN>;
+switch ("Y") {
+case "Y"   {system($command); print "Database $db_name has been deleted."; <STDIN>;};
+case "N"   {return 0;};
+}
+
 
 }
 sub display_menu {
@@ -114,7 +130,7 @@ switch ($choice) {
 
 
 print "You selected $choice \n\n";
-print "Pres any key";
+print "Press any key";
 <STDIN>;
 return 0;
 }
