@@ -43,13 +43,13 @@ switch ($os_type_returned) {
 	case "win64"  {$os="win"};
 	case "darwin" {$os="mac"};
 
-}
+``}
 
 }
 
 
 sub create_member_table {
-$dbh->do(" CREATE TABLE members ( assoc_number, firstname, lastname, address, city, state, zip, email, phone, date_joined, studio_id, styles, notes) ");
+$dbh->do(" CREATE TABLE members ( assoc_number, firstname, lastname, address, city, state, zip, birth_date, email, phone, current_rank, last_test, current_instructor, date_joined, studio_id, styles, other_assoc, notes) ");
 }
 
 sub create_promotion_table {
@@ -68,8 +68,8 @@ $dbh->do(" DELETE TABLE promotions ");
 
 sub delete_ukmaa_database {
 my $answer = "";
-print "Are you sure you want to delete the entire database? (y/n)"; 
-$answer = <STDIN>; 
+print "Are you sure you want to delete the entire database? (y/n)";
+$answer = <STDIN>;
 $answer = uc($answer);
 print "\n";
 
@@ -123,7 +123,7 @@ switch ($choice) {
 	case  1         {create_member_table(); return 0;}
 	case  2         {create_promotion_table(); return 0;}
 	case "A"        {drop_member_table(); return 0;}
-	case "B"	{drop_promotion_table(); return 0;}
+	case "B"	      {drop_promotion_table(); return 0;}
 	case "C"        {delete_ukmaa_database(); return 0;}
 	else		{print "Invalid selection try again\n"; <STDIN>; return 0;}
 }
@@ -134,4 +134,3 @@ print "Press any key";
 <STDIN>;
 return 0;
 }
-
