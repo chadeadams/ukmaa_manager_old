@@ -4,11 +4,10 @@
 
 use DBI;
 use Switch;
+use Term::ANSIScreen qw(cls);
 
 
-#Connect to DB:
-local $db_name = "ukmaa_data.dbl";
-local $dbh = DBI->connect("dbi:SQLite:$db_name") || die "Cannot connect: $DBI::errstr";
+
 
 #Main Program
 main();
@@ -16,6 +15,7 @@ main();
 
 
 sub main {
+  connect_sql();
  view_menu();
  exit;
 }
@@ -25,7 +25,7 @@ sub main {
 
 sub view_menu {
 my $numb_members=count_members();
-system("clear");
+cls();
 print "==========================================================================\n";
 print "|                                                                        |\n";
 print "|                          UKMAA Manager                                 |\n";
@@ -45,7 +45,7 @@ get_selection();
 sub get_selection {
 my $selection = "";
 print "\n\n";
-print "Please enter your selection: ";
+print "Please enter your selection -> ";
 $selection = <STDIN>;
 chomp($selection);
 $selection = uc($selection);
@@ -62,9 +62,16 @@ switch($selection) {
 return 0;
 }
 
+#Connect to SQLlite
+sub connect_sql {
+#Connect to DB:
+our $db_name = "ukmaa_data.dbl";
+our $dbh = DBI->connect("dbi:SQLite:$db_name") || die "Cannot connect: $DBI::errstr";
+}
+
 #Add New Member
 sub new_member {
-system("clear");
+cls();
 print "==========================================================================\n";
 print "|                  Add New Association Member to Database                |\n";
 print "==========================================================================\n";
@@ -82,7 +89,7 @@ print "State (e.g TX): "; my $state=<STDIN>;
 print "Zip Code: "; my $zip=<STDIN>;
 print "Birth Date (mm/dd/yy): "; my $dob=<STDIN>;
 print "E-Mail Address: "; my $email=<STDIN>;
-print "Contact Phone: "; my $phone=<STDIN>;
+print "Contact Phone (xxx-xxx-xxxx): "; my $phone=<STDIN>;
 print "Current Rank: "; my $current_rank=<STDIN>;
 print "Last Test Date (mm/dd/yy): "; my $last_test=<STDIN>;
 print "Current Instructor: "; my $current_instructor=<STDIN>;
@@ -96,22 +103,36 @@ chomp($first_name); chomp($last_name); chomp($assoc_number); chomp($address); ch
 chomp($last_test); chomp($current_instructor); chomp($date_joined); chomp($studio_id); chomp($styles); chomp($other_assoc); chomp($notes);
 
 #Veiew and verify entry
+cls();
 print "\n\n\n";
-print("==================================================================================\n");
-printf("%-251s","Association ID: $assoc_number\n");
-print("===================================================================================\n\n");
-printf("%25s", "First Name: $first_name"); printf("%25s", "Last Name: $last_name\n");
-printf("%25s","Address: $address"); printf("%25s", "City: $city\n");
-printf("%25s","State: $state"); printf("%25s","Zip: $zip\n");
-printf("%-25s","Birth Date: $dob"); printf("%-25s","E-Mail Address:$email\n");
+print("=========================================================================\n");
+printf("%30s","Viewing Association ID: $assoc_number\n");
+print("=========================================================================\n\n");
+print "--------------------------------------------------------------------------\n";
+print "Section 1: Student Information\n\n";
+print "--------------------------------------------------------------------------\n";
+printf("%-30s", "\rFirst Name: $first_name"); printf("%-30s", "Last Name: $last_name\n");
+printf("%-30s", "\rAddress: $address"); printf("%-30s", "City: $city\n");
+printf("%-30s", "\rState: $state"); printf("%-30s", "Zip: $zip\n");
+printf("%-30s", "\rBirth Date: $dob"); printf("%-30s", "E-Mail Address:$email\n");
+printf("%-30s", "\rContact Phone: $phone\n");
 
-print "Contact Phone: $phone                              Current Rank: $currenk_rank\n";
-print "Last Test Date: $last_test                         Current Instructor: $current_instructor\n";
-print "Date Joined: $date_joined                          Studio ID: $studio_id\n";
-print "Style(s) Preformed: $styles                        Other Associations/Federations: $other_assoc\n";
-print "Notes: $notes\n";
 print "\n\n";
-print "Is all the above information correct? (y/n) "; my $answer = <STDIN>;
+print "--------------------------------------------------------------------------\n";
+print "Section 2: Rank & Style Information\n\n";
+print "--------------------------------------------------------------------------\n";
+printf("%-25s", "\rCurrent Rank: $currenk_rank"); printf("%-25s", "Current Instructor: $current_instructor\n");
+printf("%-25s", "\rLast Test Date: $last_test"); printf("%-25s", "Date Joined: $date_joined\n");
+printf("%-25s", "\rStudio ID: $studio_id\n");
+printf("%-30s", "\rStyle(s) Preformed: $styles\n");
+printf("%-30s", "\rOther Associations/Federations: $other_assoc\n");
+print "\n\n";
+print "--------------------------------------------------------------------------\n";
+print "Section 3: Notes\n\n";
+print "--------------------------------------------------------------------------\n";
+printf("%-70s", "\rNotes: $notes\n");
+print "\n";
+print "Is all the above information correct?  (y/n/q) "; my $answer = <STDIN>;
 chomp($answer);
 $answer=uc($answer);
 switch ($answer) {
@@ -125,6 +146,7 @@ switch ($answer) {
        print "Added $first_name $last_name to the UKMAA database. Press any key to return to menu...";  <STDIN>;
        view_menu();
     }
+    case "Q" {view_menu();}
     else {print "Invalid entry, try again. <STDIN>;"}
 
     }
