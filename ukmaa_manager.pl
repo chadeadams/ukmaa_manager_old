@@ -36,6 +36,7 @@ print "                      Total Number of members: $numb_members\n\n";
 print "                <N>.. Enter New Association Member \n";
 print "                <E>.. Edit Existing Member         \n";
 print "                <L>.. List All Members             \n";
+print "                <V>.. View Member Info             \n";
 print "\n\n";
 print "                <D>.. Database Manager             \n";
 print "                <Q>.. Quit Program                 \n";
@@ -56,6 +57,7 @@ switch($selection) {
 	case "N" {new_member();}
 	case "E" {edit_member();}
   case "L" {list_all_members()}
+  case "V" {view_member()}
   else {view_menu();}
 }
 
@@ -79,6 +81,7 @@ print "\n\n";
 #Declare Variables
 print "Adding new member to the UKMAA Member Database...\n";
 print "Please enter all information, or put N/A if it does not apply...\n";
+print "You can edit this information later, if needed.\n";
 print "\n\n";
 print "FIRST name: "; my $first_name = <STDIN>;
 print "LAST name: "; my $last_name = <STDIN>;
@@ -87,13 +90,13 @@ print "Address: "; my $address = <STDIN>;
 print "City: "; my $city = <STDIN>;
 print "State (e.g TX): "; my $state=<STDIN>;
 print "Zip Code: "; my $zip=<STDIN>;
-print "Birth Date (mm/dd/yy): "; my $dob=<STDIN>;
+print "Birth Date (mm/dd/yyyy): "; my $dob=<STDIN>;
 print "E-Mail Address: "; my $email=<STDIN>;
 print "Contact Phone (xxx-xxx-xxxx): "; my $phone=<STDIN>;
 print "Current Rank: "; my $current_rank=<STDIN>;
-print "Last Test Date (mm/dd/yy): "; my $last_test=<STDIN>;
+print "Last Test Date (mm/dd/yyyy): "; my $last_test=<STDIN>;
 print "Current Instructor: "; my $current_instructor=<STDIN>;
-print "Date Joined: "; my $date_joined=<STDIN>;
+print "Date Joined (mm/dd/yyyy): "; my $date_joined=<STDIN>;
 print "Studio ID: "; my $studio_id=<STDIN>;
 print "Style(s) Preformed: "; my $styles=<STDIN>;
 print "Other Associations/Federations belonged to: "; my $other_assoc=<STDIN>;
@@ -140,7 +143,7 @@ switch ($answer) {
     case "Y"  {
 
       #Insert Into SQLite
-       my $sth = $dbh->prepare("INSERT INTO members VALUES ('$assoc_number', '$first_name', '$last_name', '$address', '$city', '$state', '$zip', '$birth_date', '$email', '$phone', '$current_rank', '$last_test', '$current_instructor', '$date_joined', '$studio_id', '$styles', '$other_assoc', '$notes')");
+       my $sth = $dbh->prepare("INSERT INTO members VALUES ('$assoc_number', '$first_name', '$last_name', '$address', '$city', '$state', '$zip', '$dob', '$email', '$phone', '$current_rank', '$last_test', '$current_instructor', '$date_joined', '$studio_id', '$styles', '$other_assoc', '$notes')");
        $sth->execute() or die "Association Member Addition Failed to add to database - error: $dbh->errstr()";
        print "\n\n";
        print "Added $first_name $last_name to the UKMAA database. Press any key to return to menu...";  <STDIN>;
@@ -166,5 +169,126 @@ sub count_members {
   }
 
   return $numb_members;
+
+}
+
+
+sub list_all_members {
+
+#List All members
+my $number_members = count_members();
+#Get member information
+
+print "There are $number_members members currently in the database...\n\n";
+my $sth = $dbh->prepare("SELECT assoc_number, firstname, lastname, birth_date FROM members");
+$sth->execute();
+
+#Print header
+print("=========================================================================\n");
+print("                          UKMAA User List\n");
+print("=========================================================================\n\n");
+
+while (my $ref = $sth->fetchrow_hashref()){
+  my $assoc_number = $ref->{'assoc_number'};
+  my $first_name = $ref->{'firstname'};
+  my $last_name = $ref->{'lastname'};
+  my $birth_date = $ref->{'birth_date'};
+  chomp($assoc_number); chomp($first_name); chomp($last_name); chomp ($birth_date);
+
+  if ($birth_date eq "") {
+    $birth_date = "NOT ENTERED";
+  }
+  if ($first_name eq ""){
+    $first_name = "NOT ENTERED";
+  }
+  if ($last_name eq "") {
+    $last_name = "NOT ENTERED";
+  }
+
+  #Print Each Line from array
+  printf("%-35s", "\rAssociation Number: $assoc_number"); printf("%-45s","Name: $first_name $last_name"); printf("%-10s", "DOB: $birth_date\n");
+  #print "Number: $assoc_number   Name: $first_name $last_name   DOB: $birth_date\n";
+}
+print "\n\rPress any key to return to main menu..";
+<STDIN>;
+#disconnect_sql();
+view_menu();
+}
+
+
+#Disconnect SQLlite Connect / Release Resources
+sub disconnect_sql {
+if  ($dbh) {
+  $dbh->disconnect();
+}
+
+}
+
+sub view_member {
+  cls();
+  my $given_assoc_number = shift;
+  chomp($given_assoc_number);
+  my $assoc_number_given = "";
+  if ($given_assoc_number eq "") {
+    print ("Please enter the Association ID: ");
+    $assoc_number_given = <STDIN>;
+    chomp($assoc_number_given);
+
+
+
+      }
+  else {
+      $assoc_number_given = $given_assoc_number;
+  }
+  my $sth = $dbh->prepare("SELECT * FROM members WHERE assoc_number = '$assoc_number_given'");
+  $sth->execute();
+  my $ref = $sth->fetchrow_hashref();
+
+  cls();
+  print "\n\n\n";
+  print("=========================================================================\n");
+  printf("%30s","Viewing Association ID: $ref->{'assoc_number'}\n");
+  print("=========================================================================\n\n");
+  print "--------------------------------------------------------------------------\n";
+  print "Section 1: Student Information\n\n";
+  print "--------------------------------------------------------------------------\n";
+  printf("%-30s", "\rFirst Name: $ref->{'firstname'}"); printf("%-30s", "Last Name: $ref->{'lastname'}\n");
+  printf("%-30s", "\rAddress: $ref->{'address'}"); printf("%-30s", "City: $ref->{'city'}\n");
+  printf("%-30s", "\rState: $ref->{'state'}"); printf("%-30s", "Zip: $ref->{'zip'}\n");
+  printf("%-30s", "\rBirth Date: $ref->{'dob'}"); printf("%-30s", "E-Mail Address:$ref->{'email'}\n");
+  printf("%-30s", "\rContact Phone: $ref->{'phone'}\n");
+
+  print "\n\n";
+  print "--------------------------------------------------------------------------\n";
+  print "Section 2: Rank & Style Information\n\n";
+  print "--------------------------------------------------------------------------\n";
+  #printf("%-25s", "\rCurrent Rank: $currenk_rank"); printf("%-25s", "Current Instructor: $current_instructor\n");
+  #printf("%-25s", "\rLast Test Date: $last_test"); printf("%-25s", "Date Joined: $date_joined\n");
+  #printf("%-25s", "\rStudio ID: $studio_id\n");
+  #printf("%-30s", "\rStyle(s) Preformed: $styles\n");
+  #printf("%-30s", "\rOther Associations/Federations: $other_assoc\n");
+  print "\n\n";
+  print "--------------------------------------------------------------------------\n";
+  print "Section 3: Notes\n\n";
+  print "--------------------------------------------------------------------------\n";
+  #printf("%-70s", "\rNotes: $notes\n");
+  print "\n";
+  view_option($assoc_number_given);
+
+}
+
+sub view_option {
+  my $assoc_number_given = shift;
+  printf("<Q>... Quit to Main Menu    <E>... Edit Member   <C>... Change Member Status" . "\n");
+  printf("Please enter your selection -> ");
+  my $command = <STDIN>;
+  chomp($command);
+  $command = uc($command);
+  switch ($command){
+    case "Q" {view_menu()}
+    case "E" {  }
+    case "C" {  }
+    else {printf("\r\nInvalid command.. Try again."); <STDIN>; view_member($assoc_number_given); }
+  }
 
 }

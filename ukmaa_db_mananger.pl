@@ -10,9 +10,9 @@ use Switch;
 #Create DB Connection
 
  #Connect To Database
-local $db_name = "ukmaa_data.dbl";
-local $dbh = DBI->connect( "dbi:SQLite:$db_name" ) || die "Cannot connect: $DBI::errstr";
-local $os = "";
+our $db_name = "ukmaa_data.dbl";
+our $dbh = DBI->connect( "dbi:SQLite:$db_name" ) || die "Cannot connect: $DBI::errstr";
+our $os = "";
 
 #main program
 run_program();
@@ -33,6 +33,10 @@ menu();
 
 }
 
+sub close_sql {
+	$dbh->disconnect();
+}
+
 sub determine_os {
 
 local $os_type_returned = $^O;
@@ -49,7 +53,7 @@ switch ($os_type_returned) {
 
 
 sub create_member_table {
-$dbh->do(" CREATE TABLE members ( assoc_number, firstname, lastname, address, city, state, zip, birth_date, email, phone, current_rank, last_test, current_instructor, date_joined, studio_id, styles, other_assoc, notes) ");
+$dbh->do(" CREATE TABLE members ( assoc_number, firstname, lastname, address, city, state, zip, birth_date, email, phone, current_rank, last_test, current_instructor, date_joined, studio_id, styles, other_assoc, notes, status) ");
 }
 
 sub create_promotion_table {
@@ -57,7 +61,26 @@ sub create_promotion_table {
 }
 
 sub drop_member_table {
-$dbh->do(" DELETE TABLE members ");
+printf("Are you sure you want to delete the members table? This will delete all of your member data. <y/n)"); my $answer = <STDIN>;
+chomp($answer);
+$answer = uc($answer);
+switch ($answer) {
+	case "Y" {printf("Please type DELETE to delete table. -> ");
+						my $check = <STDIN>;
+						chomp($check);
+						$check = uc ($check);
+						if ($check eq "DELETE") {
+							$dbh->do(" DROP TABLE members ");
+							print "\rTable members dropped from database. Press any key.";  <STDIN>;
+						}
+						else {
+							 printf("\rValidation unsuccessful. Exiting.."); display_menu();
+						}
+						}
+	case "N" {display_menu();}
+	else {print "Invalid entry. Try again."; <STDIN>; drop_member_table();}
+}
+
 }
 
 sub drop_promotion_table {
@@ -77,10 +100,9 @@ my $command = "";
 switch ($os) {
 case "linux" {$command = "rm -f $db_name";};
 case "win"   {$command = "del $db_name";};
-case "mac"   {$command = "rm -f $db_name";};
+case "mac"   {$command = "rm -f $db_name";}; #Unsure/Untested
 }
 
-print "$answer"; <STDIN>;
 switch ("Y") {
 case "Y"   {system($command); print "Database $db_name has been deleted."; <STDIN>;};
 case "N"   {return 0;};
@@ -125,6 +147,7 @@ switch ($choice) {
 	case "A"        {drop_member_table(); return 0;}
 	case "B"	      {drop_promotion_table(); return 0;}
 	case "C"        {delete_ukmaa_database(); return 0;}
+	case "!"        {backup_database(); return 0;}
 	else		{print "Invalid selection try again\n"; <STDIN>; return 0;}
 }
 
@@ -133,4 +156,9 @@ print "You selected $choice \n\n";
 print "Press any key";
 <STDIN>;
 return 0;
+}
+
+sub backup_database {
+#PLaceholder
+
 }
